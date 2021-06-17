@@ -10,21 +10,29 @@ var satelliteLayer = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{
     accessToken: API_KEY
 });
 
-var grayscaleLayer = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
-    id: "mapbox.light",
-    accessToken: API_KEY
+var darkmapLayer = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+  attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
+  tileSize: 512,
+  maxZoom: 18,
+  zoomOffset: -1,
+  id: "mapbox/dark-v10",
+  accessToken: API_KEY
 });
-
-var outdoorLayer = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
-    id: "mapbox.outdoors",
-    accessToken: API_KEY
+ 
+var streetmapLayer = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+  attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
+  tileSize: 512,
+  maxZoom: 18,
+  zoomOffset: -1,
+  id: "mapbox/streets-v11",
+  accessToken: API_KEY
 });
 
 // Object to hold Layer container
 var LayerContainer = {
     "Satellite": satelliteLayer,
-    "Grayscale": grayscaleLayer,
-    "Outdoors": outdoorLayer
+    "Dark Map": darkmapLayer,
+    "Street Map": streetmapLayer
 };
 
 // holds the overlay layers
@@ -88,7 +96,7 @@ d3.json(earthquakeSite, function(earthquakeData) {
             return L.circleMarker(latlng);
         },
         style: dotStyle,
-        
+
         //This adds the popups that provide additional information about the earthquake when a marker is clicked.
        
         onEachFeature: function(feature, layer) {
@@ -101,4 +109,38 @@ d3.json(earthquakeSite, function(earthquakeData) {
     }).addTo(earthquakes);
     earthquakes.addTo(myMap);
 
+    // This adds the legend
+
+ // Add in the colors to be selected in the legend
+ function getColor(d) {
+    return d > 5 ? '#581845' :
+           d > 4 ? '#900C3F' :
+           d > 3 ? '#C70039' :
+           d > 2 ? '#FF5733' :
+           d > 1 ? '#FFC300' :
+                   '#DAF7A6';
+  }
+
+  // Add legend to the map
+  var legend = L.control({position: 'bottomright'});
+  
+  legend.onAdd = function (map) {
+  
+      var div = L.DomUtil.create('div', 'info legend'),
+          magnitude = [0, 1, 2, 3, 4, 5],
+          labels = [];
+
+          div.innerHTML += "<h3>Magnitude</h3>"
+  
+      // 
+      for (var i = 0; i < magnitude.length; i++) {
+          div.innerHTML +=
+              '<i style="background:' + getColor(magnitude[i] + 1) + '"></i> ' +
+              magnitude[i] + (magnitude[i + 1] ? '&ndash;' + magnitude[i + 1] + '<br>' : '+');
+      }
+  
+      return div;
+  };
+  
+  legend.addTo(myMap);
 });
