@@ -1,8 +1,10 @@
 // URL for earthquake data
 var earthquakeSite = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+var tectonicPLateSite = "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json"
 
 // Create layer groups for earthquake data
 var earthquakes = new L.LayerGroup();
+var tectonic = new L.LayerGroup();
 
 // Create Variables for different layers
 var satelliteLayer = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
@@ -38,6 +40,7 @@ var LayerContainer = {
 // holds the overlay layers
 var overlayMap = {
     "Earthquakes": earthquakes,
+    "Fault Lines": tectonic
 };
 
 //Create our initial map object
@@ -109,37 +112,49 @@ d3.json(earthquakeSite, function(earthquakeData) {
     }).addTo(earthquakes);
     earthquakes.addTo(myMap);
 
+
+    // Uses D3 for tectonic plates
+    d3.json(tectonicPLateSite, function(plateData) {
+    L.geoJson(plateData, {
+        color: "#142fdc",
+        weight: 2
+    }).addTo(tectonic);
+    
+    // Add tectonic Layer to the Map
+    tectonic.addTo(myMap);
+    });
+
+
     // This adds the legend
 
- // Add in the colors to be selected in the legend
- function getColor(d) {
-    return d > 5 ? '#581845' :
-           d > 4 ? '#900C3F' :
-           d > 3 ? '#C70039' :
-           d > 2 ? '#FF5733' :
-           d > 1 ? '#FFC300' :
-                   '#DAF7A6';
-  }
+    // Add in the colors to be selected in the legend
+    function getColor(d) {
+        return d > 5 ? '#581845' :
+            d > 4 ? '#900C3F' :
+            d > 3 ? '#C70039' :
+            d > 2 ? '#FF5733' :
+            d > 1 ? '#FFC300' :
+                    '#DAF7A6';
+    }
 
-  // Add legend to the map
-  var legend = L.control({position: 'bottomright'});
+    // Add legend to the map
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (map) {
   
-  legend.onAdd = function (map) {
-  
-      var div = L.DomUtil.create('div', 'info legend'),
-          magnitude = [0, 1, 2, 3, 4, 5],
-          labels = [];
+         var div = L.DomUtil.create('div', 'info legend'),
+              magnitude = [0, 1, 2, 3, 4, 5],
+              labels = [];
 
-          div.innerHTML += "<h3>Magnitude</h3>"
+             div.innerHTML += "<h3>Magnitude</h3>"
   
-      // 
-      for (var i = 0; i < magnitude.length; i++) {
-          div.innerHTML +=
-              '<i style="background:' + getColor(magnitude[i] + 1) + '"></i> ' +
-              magnitude[i] + (magnitude[i + 1] ? '&ndash;' + magnitude[i + 1] + '<br>' : '+');
-      }
+         // 
+        for (var i = 0; i < magnitude.length; i++) {
+            div.innerHTML +=
+               '<i style="background:' + getColor(magnitude[i] + 1) + '"></i> ' +
+                 magnitude[i] + (magnitude[i + 1] ? '&ndash;' + magnitude[i + 1] + '<br>' : '+');
+        }
   
-      return div;
+        return div;
   };
   
   legend.addTo(myMap);
